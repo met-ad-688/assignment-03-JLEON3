@@ -58,3 +58,104 @@ print("---This is Diagnostic check, No need to print it in the final doc---")
 df.printSchema() # comment this line when rendering the submission
 df.show(5)
 ```
+
+# Data Preparation
+
+```{python}
+#Step 1: Casting salary and experience columns
+df = df.withColumn("SALARY", col("SALARY").cast("float")) \
+      .withColumn("SALARY_FROM", col("SALARY_FROM").cast("float")) \
+      .withColumn("SALARY_TO", col("SALARY_TO").cast("float")) \
+      .withColumn("MIN_YEARS_EXPERIENCE", col("MIN_YEARS_EXPERIENCE").cast("float")) \
+      .withColumn("MAX_YEARS_EXPERIENCE", col("MAX_YEARS_EXPERIENCE").cast("float"))
+
+# Step 2: Computing mediasn for salary colums
+def compute_median(sdf, col_name):
+    q = sdf.approxQuantile(col_name, [0.5], 0.01)
+    return q[0] if q else None
+
+median_from = compute_median(df, "SALARY_FROM")
+median_to = compute_median(df, "SALARY_TO")
+
+print("Medians:", median_from, median_to)
+
+# Step 3: Imputing missing salaries, but not experience
+df = df.fillna({
+      "SALARY_FROM": median_from,
+      "SALARY_TO": median_to
+})
+
+
+# Step 4: Computing average salary
+df = df.withColumn("Average_Salary", (col("SALARY_FROM") + col("SALARY_TO")) / 
+2)
+
+# Step 5: Selecting required columns
+export_cols = [
+    "EDUCATION_LEVELS_NAME",
+    "REMOTE_TYPE_NAME",
+    "MAX_YEARS_EXPERIENCE",
+    "Average_Salary",
+    "LOT_V6_SPECIALIZED_OCCUPATION_NAME"
+]
+df_seleted = df.select(*export_cols)
+
+
+# Step 6: Saving to CSV
+pdf = df.selected.toPandas()
+pdf.to_csv("./data/lightcast_cleaned.csv", index=False)
+
+print("Data cleaning complete. Rows retained:", len(pdf))
+
+```
+
+
+
+# Salary Distribution by Industry and Employment Type
+Compare salary variations across industries.
+Filter the dataset
+  Remove records where salary is missing or zero.
+Aggregate Data
+  Group by NAICS industry codes.
+  Group by employment type and compute salary distribution.
+Visualize results
+  Create a box plot where:
+    X-axis = NAICS2_NAME
+    Y-axis = SALARY_FROM
+    Group by EMPLOYMENT_TYPE_NAME.
+  Customize colors, fonts, and styles.
+Explanation: Write two sentences about what the graph reveals.
+
+
+
+# Salary Analysis by ONET Occupation Type (Bubble Chart)
+Analyze how salaries differ across ONET occupation types.
+Aggregate Data
+  Compute median salary for each occupation in the ONET taxonomy.
+Visualize results
+  Create a bubble chart where:
+    X-axis = ONET_NAME
+    Y-axis = Median Salary
+    Size = Number of job postings
+  Apply custom colors and font styles.
+Explanation: Write two sentences about what the graph reveals.
+
+
+# Salary by Education Level
+Create two groups:
+  Associate’s or lower (GED, Associate, No Education Listed)
+  Bachelor’s (Bachelor’s degree)
+  Master’s (Master’s degree)
+  PhD (PhD, Doctorate, professional degree)
+Plot scatter plots for each group using, MAX_YEARS_EXPERIENCE (with jitter), Average_Salary, LOT_V6_SPECIALIZED_OCCUPATION_NAME
+After each graph, add a short explanation of key insights.
+
+
+# Salary by Remote Work Type
+Split into three groups based on REMOTE_TYPE_NAME:
+  Remote
+  Hybrid
+  Onsite (includes [None] and blank)
+Plot scatter plots for each group using,  MAX_YEARS_EXPERIENCE (with jitter), Average_Salary, LOT_V6_SPECIALIZED_OCCUPATION_NAME
+Also, create salary histograms for all three groups.
+After each graph, briefly describe any patterns or comparisons.

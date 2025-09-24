@@ -79,8 +79,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-  
-<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="assignment03-jleon3.docx"><i class="bi bi-file-word"></i>MS Word</a></li></ul></div></div>
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link active" data-scroll-target="#data-preparation"><span class="header-section-number">1</span> Data Preparation</a></li>
+  <li><a href="#salary-distribution-by-industry-and-employment-type" id="toc-salary-distribution-by-industry-and-employment-type" class="nav-link" data-scroll-target="#salary-distribution-by-industry-and-employment-type"><span class="header-section-number">2</span> Salary Distribution by Industry and Employment Type</a></li>
+  <li><a href="#salary-analysis-by-onet-occupation-type-bubble-chart" id="toc-salary-analysis-by-onet-occupation-type-bubble-chart" class="nav-link" data-scroll-target="#salary-analysis-by-onet-occupation-type-bubble-chart"><span class="header-section-number">3</span> Salary Analysis by ONET Occupation Type (Bubble Chart)</a></li>
+  <li><a href="#salary-by-education-level" id="toc-salary-by-education-level" class="nav-link" data-scroll-target="#salary-by-education-level"><span class="header-section-number">4</span> Salary by Education Level</a></li>
+  <li><a href="#salary-by-remote-work-type" id="toc-salary-by-remote-work-type" class="nav-link" data-scroll-target="#salary-by-remote-work-type"><span class="header-section-number">5</span> Salary by Remote Work Type</a></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="assignment03-jleon3.docx"><i class="bi bi-file-word"></i>MS Word</a></li></ul></div></nav>
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -128,7 +138,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>1 Load the Dataset Load the Raw Dataset: Use Pyspark to the lightcast_data.csv file into a DataFrame: You can reuse the previous code. Copying code from your friend constitutes plagiarism. DO NOT DO THIS.</p>
-<div id="87f45a2f" class="cell" data-execution_count="1">
+<div id="4d9bf496" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.io <span class="im">as</span> pio</span>
@@ -161,8 +171,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
 Setting default log level to "WARN".
 To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
-25/09/24 18:23:08 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
-[Stage 1:&gt;                                                          (0 + 1) / 1]                                                                                25/09/24 18:23:24 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.</code></pre>
+25/09/24 19:13:09 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[Stage 1:&gt;                                                          (0 + 1) / 1]                                                                                25/09/24 19:13:26 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>---This is Diagnostic check, No need to print it in the final doc---
@@ -316,6 +326,52 @@ root
 only showing top 5 rows</code></pre>
 </div>
 </div>
+<section id="data-preparation" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Data Preparation</h1>
+<div id="403db6e0" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Step 1: Casting salary and experience columns</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.withColumn(<span class="st">"SALARY"</span>, col(<span class="st">"SALARY"</span>).cast(<span class="st">"float"</span>)) <span class="op">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>      .withColumn(<span class="st">"SALARY_FROM"</span>, col(<span class="st">"SALARY_FROM"</span>).cast(<span class="st">"float"</span>)) <span class="op">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      .withColumn(<span class="st">"SALARY_TO"</span>, col(<span class="st">"SALARY_TO"</span>).cast(<span class="st">"float"</span>)) <span class="op">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      .withColumn(<span class="st">"MIN_YEARS_EXPERIENCE"</span>, col(<span class="st">"MIN_YEARS_EXPERIENCE"</span>).cast(<span class="st">"float"</span>)) <span class="op">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      .withColumn(<span class="st">"MAX_YEARS_EXPERIENCE"</span>, col(<span class="st">"MAX_YEARS_EXPERIENCE"</span>).cast(<span class="st">"float"</span>))</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Computing mediasn for salary colums</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_median(sdf, col_name):</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> sdf.approxQuantile(col_name, [<span class="fl">0.5</span>], <span class="fl">0.01</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> q[<span class="dv">0</span>] <span class="cf">if</span> q <span class="cf">else</span> <span class="va">None</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>median_from <span class="op">=</span> compute_median(df, <span class="st">"SALARY_FROM"</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>median_to <span class="op">=</span> compute_median(df, <span class="st">"SALARY_TO"</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Medians:"</span>, median_from, median_to)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>[Stage 3:&gt;                                                          (0 + 1) / 1]                                                                                [Stage 4:&gt;                                                          (0 + 1) / 1]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Medians: 87295.0 130042.0</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                                </code></pre>
+</div>
+</div>
+</section>
+<section id="salary-distribution-by-industry-and-employment-type" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Salary Distribution by Industry and Employment Type</h1>
+<p>Compare salary variations across industries. Filter the dataset Remove records where salary is missing or zero. Aggregate Data Group by NAICS industry codes. Group by employment type and compute salary distribution. Visualize results Create a box plot where: X-axis = NAICS2_NAME Y-axis = SALARY_FROM Group by EMPLOYMENT_TYPE_NAME. Customize colors, fonts, and styles. Explanation: Write two sentences about what the graph reveals.</p>
+</section>
+<section id="salary-analysis-by-onet-occupation-type-bubble-chart" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Salary Analysis by ONET Occupation Type (Bubble Chart)</h1>
+<p>Analyze how salaries differ across ONET occupation types. Aggregate Data Compute median salary for each occupation in the ONET taxonomy. Visualize results Create a bubble chart where: X-axis = ONET_NAME Y-axis = Median Salary Size = Number of job postings Apply custom colors and font styles. Explanation: Write two sentences about what the graph reveals.</p>
+</section>
+<section id="salary-by-education-level" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Salary by Education Level</h1>
+<p>Create two groups: Associate’s or lower (GED, Associate, No Education Listed) Bachelor’s (Bachelor’s degree) Master’s (Master’s degree) PhD (PhD, Doctorate, professional degree) Plot scatter plots for each group using, MAX_YEARS_EXPERIENCE (with jitter), Average_Salary, LOT_V6_SPECIALIZED_OCCUPATION_NAME After each graph, add a short explanation of key insights.</p>
+</section>
+<section id="salary-by-remote-work-type" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Salary by Remote Work Type</h1>
+<p>Split into three groups based on REMOTE_TYPE_NAME: Remote Hybrid Onsite (includes [None] and blank) Plot scatter plots for each group using, MAX_YEARS_EXPERIENCE (with jitter), Average_Salary, LOT_V6_SPECIALIZED_OCCUPATION_NAME Also, create salary histograms for all three groups. After each graph, briefly describe any patterns or comparisons.</p>
+</section>
 
 </main>
 <!-- /main column -->
