@@ -117,6 +117,44 @@ print("Data cleaning complete. Rows retained:", len(pdf))
 
 ```
 
+# Set Up Style Template
+```{python}
+import plotly.graph_objects as go
+import plotly.io as pio
+
+pio.templates["nike"] = go.layout.Template(
+    # LAYOUT
+    layout = {
+        # Fonts
+        # Note - 'family' must be a single string, NOT a list or dict!
+        'title':
+            {'font': {'family': 'HelveticaNeue-CondensedBold, Helvetica, Sans-serif',
+                      'size':30,
+                      'color': '#333'}
+            },
+        'font': {'family': 'Helvetica Neue, Helvetica, Sans-serif',
+                      'size':16,
+                      'color': '#333'},
+        # Colorways
+        'colorway': ['#ec7424', '#a4abab'],
+        # Keep adding others as needed below
+        'hovermode': 'x unified'
+    },
+    # DATA
+    data = {
+        # Each graph object must be in a tuple or list for each trace
+        'bar': [go.Bar(texttemplate = '%{value:$.2s}',
+                       textposition='outside',
+                       textfont={'family': 'Helvetica Neue, Helvetica, Sans-serif',
+                                 'size': 20,
+                                 'color': '#FFFFFF'
+                                 })]
+    }
+)
+
+
+```
+
 
 
 # Salary Distribution by Industry and Employment Type
@@ -166,55 +204,55 @@ fig = px.box(
       x="EMPLOYMENT_TYPE_NAME",
       y="SALARY",
       title="Salary Distribution by Employment Type",
-      color_discrete_sequence=["black"], #single neutral color
+      # color_discrete_sequence=["black"], #single neutral color
       boxmode="group",
       points="all", #show all outliers
 )
 
 # Improve layout, font styles, and axis labels
-fig.update_layout(
-    title=dict(
-          text="Salary Distribution by Employment Type",
-          font=dict(size=30, family="Arial", color="black", weight="bold") #biggest & bold title
-    ),
-    xaxis=dict(
-        title=dict(text="Employment Type", font=dict(size=14, family="Arial", color="black", weight="bold")),
-        tickangle=0,
-        tickfont=dict(size=12, family="arial", color="black", weight="bold"),
-        showline=True,
-        linewidth=2,
-        linecolor="black",
-        mirror=True,
-        showgrid=False,
-        categoryorder="array",
-        categoryarray=sorted_employment_types.tolist()
-    ),
-    yaxis=dict(
-        title=dict(text="Salary ($)", font=dict(size=14, family="Arial", color="black", weight="bold")),
-        tickvals=[0, 50000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000],
-        ticktext=["0", "50K", "100K", "150K", "200K", "250K", "300K", "350K", "400K", "450K", "500K"],
-        tickfont=dict(size=12, family="Arial", color="black", weight="bold"),
-        showline=True,
-        linewidth=2,
-        linecolor="black",
-        mirror=True,
-        showgrid=True,
-        gridcolor="lightgray",
-        gridwidth=0.5
-    ),
-    font=dict(family="Arial", size=12, color="black"),
-    boxgap=0.7,
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    showlegend=False,
-    height=500,
-    width=850,
-)
+fig.update_layout(template="nike")
+    # title=dict(
+    #       text="Salary Distribution by Employment Type",
+    #       font=dict(size=30, family="Arial", color="black", weight="bold") #biggest & bold title
+    # ),
+    # xaxis=dict(
+    #     title=dict(text="Employment Type", font=dict(size=14, family="Arial", color="black", weight="bold")),
+    #     tickangle=0,
+    #     tickfont=dict(size=12, family="arial", color="black", weight="bold"),
+    #     showline=True,
+    #     linewidth=2,
+    #     linecolor="black",
+    #     mirror=True,
+    #     showgrid=False,
+    #     categoryorder="array",
+    #     categoryarray=sorted_employment_types.tolist()
+    # ),
+    # yaxis=dict(
+    #     title=dict(text="Salary ($)", font=dict(size=14, family="Arial", color="black", weight="bold")),
+    #     tickvals=[0, 50000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000],
+    #     ticktext=["0", "50K", "100K", "150K", "200K", "250K", "300K", "350K", "400K", "450K", "500K"],
+    #     tickfont=dict(size=12, family="Arial", color="black", weight="bold"),
+    #     showline=True,
+    #     linewidth=2,
+    #     linecolor="black",
+    #     mirror=True,
+    #     showgrid=True,
+    #     gridcolor="lightgray",
+    #     gridwidth=0.5
+    # ),
+    # font=dict(family="Arial", size=12, color="black"),
+    # boxgap=0.7,
+    # plot_bgcolor="white",
+    # paper_bgcolor="white",
+    # showlegend=False,
+    # height=500,
+    # width=850,
+# )
 
 # Show the figure
 fig.show()
-fig.write_html("output/Q1.html")
-fig.write_image("output/Q1.svg", width=850, height=500, scale=1)
+# fig.write_html("output/Q1.html")
+# fig.write_image("output/Q1.svg", width=850, height=500, scale=1)
 
 
 ```
@@ -222,12 +260,9 @@ fig.write_image("output/Q1.svg", width=850, height=500, scale=1)
 ```{python}
 pdf = df.select("NAICS2_NAME", "SALARY_FROM").toPandas()
 fig = px.box(pdf, x="NAICS2_NAME", y="SALARY_FROM", title="Salary Distribution by Industry")
-fig.update_layout(font_family="Arial", title_font_size=16,
-    height=900,
-    width=1100)
+fig.update_layout(template="nike")
 
-fig.update_xaxes(tickangle=45, tickfont=dict(size=12))
-
+fig.update_xaxes(tickangle=45)
 
 fig.show()
 
@@ -250,6 +285,84 @@ Visualize results
     Size = Number of job postings
   Apply custom colors and font styles.
 Explanation: Write two sentences about what the graph reveals.
+
+
+
+
+<!-- # Calculate median salary by ONET occupation
+bubble_data = df.groupBy("ONET_NAME").agg(
+    F.expr("percentile_approx(SALARY, 0.5)").alias("Median_Salary"),
+    F.count("*").alias("Job_Postings_Count")
+).toPandas()
+
+# Create bubble chart
+fig = px.scatter(
+    bubble_data,
+    x="ONET_NAME",
+    y="Median_Salary",
+    size="Job_Postings_Count",
+    title="Median Salary by ONET Occupation"
+)
+
+fig.update_layout(template="nike")
+
+fig.update_xaxes(tickangle=45)
+
+fig.show()
+
+# add back once final image created
+#fig.write_html("output/Q1updated.html")
+#fig.write_image("output/Q1updated.svg", width=850, height=500, scale=1) -->
+
+
+```{python}
+
+#Step 1: Spark SQL
+salary_analysis = spark.sql("""
+    SELECT
+        LOT_OCCUPATION_NAME AS Occupation_Name,
+        PERCENTILE(SALARY, 0.5) AS Median_Salary,
+        COUNT(*) AS Job_Postings
+    FROM job_postings
+    GROUP BY LOT_OCCUPATION_NAME
+    ORDER BY Job_Postings DESC
+    LIMIT 10
+    """)
+
+#Step 2: Convert to Pandas DataFrame
+salary_pd = salary_analysis.toPandas()
+salary_pd.head()
+
+```
+
+```{python}
+import plotly.express as px
+
+fig = px.scatter(
+      salary_pd,
+      x="Occupation_Name",
+      y="Median_Salary",
+      size="Job_Postings",
+      title="Salary Analysis by Lot Occupation Type (Bubble Chart)",
+      labels={
+          "LOT_OCCUPATION_NAME" : "Lot Occupation",
+          "Median_Salary" : "Median Salary",
+          "Job_Postings" : "Number of Job Postings"
+      },
+      hover_name="Occupation_Name",
+      size_max=60,
+      width=1000,
+      height=600,
+      color="Job_Postings",
+      color_continuous_scale="Plasma"
+)
+
+fig.update_layout(template="nike")
+
+
+```
+
+
 
 
 # Salary by Education Level
