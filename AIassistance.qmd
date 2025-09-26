@@ -1,5 +1,5 @@
 ---
-title: Assignment 03
+title: Assignment 03 - AI Assistance
 author:
   - name: Jonathan Leon
     affiliations:
@@ -24,7 +24,8 @@ date-format: long
 
 how do I update my code to show MAX_YEARS_EXPERIENCE with Jitter based off of the code I currently have? 
 
-Response - To add jitter to the MAX_YEARS_EXPERIENCE axis in your scatter plot, you can add a small random value to that column before plotting. Here’s how you can update your code:
+# Response: 
+To add jitter to the MAX_YEARS_EXPERIENCE axis in your scatter plot, you can add a small random value to that column before plotting. Here’s how you can update your code:
 
 ```{python}
 import numpy as np
@@ -54,3 +55,95 @@ Key changes:
 Created a new column MAX_YEARS_EXPERIENCE_JITTER with random noise added.
 Used this new column for the x-axis in your plot.
 This will visually separate overlapping points on the x-axis and make your scatter plot easier to interpret!
+
+# AI Request 2 (Model = Auto)
+can you explain the error message I'm receiving and how to fix it?
+
+# Response:
+The error is a broadcasting shape mismatch. You're trying to add two arrays with different lengths:
+
+df_remote["MAX_YEARS_EXPERIENCE"] has 8074 rows
+np.random.uniform(..., size=len(df_pd)) has 8070 rows (based on df_pd length)
+The Problem: You're using len(df_pd) to generate the random noise, but you should be using len(df_remote) since you're adding the jitter to df_remote.
+
+The Fix: Change this line:
+
+```{python}
+df_remote["MAX_YEARS_EXPERIENCE_JITTER"] = df_remote["MAX_YEARS_EXPERIENCE"] + np.random.uniform(-jitter_strength, jitter_strength, size=len(df_pd))
+```
+
+To this:
+```{python}
+df_remote["MAX_YEARS_EXPERIENCE_JITTER"] = df_remote["MAX_YEARS_EXPERIENCE"] + np.random.uniform(-jitter_strength, jitter_strength, size=len(df_remote))
+```
+
+Summary:
+
+Use len(df_remote) instead of len(df_pd)
+This ensures the random array has the same length as the DataFrame you're modifying
+The broadcasting error happens because pandas can't add arrays of different sizes element-wise.
+
+# AI Request 3 (Model = Auto)
+this is the initial code I used to create 3 groups that I wanted to fall under a new column named "REMOTE_GROUP". I have the names of each item that original comes from the remote type name spelled properly. am i missing something here or is it on the code I use when trying to create the diagram. Here is my initial grouping code: 
+
+# Response:
+
+Looking at your code, I can see the issue. The problem is with your regex pattern matching in the when conditions. Let me explain what's happening:
+
+The Issue: Your rlike pattern "|".join([f"(?i){deg}" for deg in Hybrid]) creates the pattern (?i)Hybrid Remote, but this doesn't work as expected because:
+
+The (?i) flag should be at the beginning of the entire pattern, not before each term
+rlike expects a proper regex pattern, but your current pattern isn't correctly formatted
+The Fix: Here's the corrected version of your grouping code:
+
+```{python}
+#Create 3 Groups
+Remote = ["Remote"]
+Hybrid = ["Hybrid Remote"]
+Onsite = ["Not Remote", "\\[None\\]"]  # Escape the brackets since they're regex special characters
+
+# Add REMOTE_Group column with corrected regex patterns
+df = df.withColumn(
+    "REMOTE_GROUP",
+    when(col("REMOTE_TYPE_NAME").rlike("(?i)^Remote$"), "Remote")
+    .when(col("REMOTE_TYPE_NAME").rlike("(?i)^Hybrid Remote$"), "Hybrid")
+    .when(col("REMOTE_TYPE_NAME").rlike("(?i)^(Not Remote|\\[None\\])$"), "Onsite")
+    .otherwise(None)  # This will help you see unmatched values
+)
+
+# Rest of your code remains the same
+df = df.withColumn("MAX_YEARS_EXPERIENCE", col("MAX_YEARS_EXPERIENCE").cast("float"))
+df = df.withColumn("Average_Salary", col("Average_Salary").cast("float"))
+
+df = df.filter(
+    col("MAX_YEARS_EXPERIENCE").isNotNull() &
+    col("Average_Salary").isNotNull() &
+    (col("MAX_YEARS_EXPERIENCE") > 0) &
+    (col("Average_Salary") > 0)
+)
+
+df_filtered = df.filter(col("REMOTE_GROUP").isin("Remote", "Hybrid", "Onsite"))
+df_remote = df_filtered.toPandas()
+
+```
+
+Key Changes:
+
+Fixed regex patterns: Used ^pattern$ to match exact strings
+Proper case-insensitive flag: (?i) at the beginning of each pattern
+Escaped brackets: \\[None\\] because [] are special regex characters
+Added .otherwise(None): This helps identify unmatched values
+To verify it's working: After running this code, check:
+
+```{python}
+# Check the grouping worked
+print("REMOTE_GROUP distribution:")
+df_remote["REMOTE_GROUP"].value_counts()
+
+# Check for any unmatched values (should be empty if all matched)
+unmatched = df.filter(col("REMOTE_GROUP").isNull())
+print(f"Unmatched records: {unmatched.count()}")
+
+```
+
+This should fix the issue and make your "Hybrid" group appear in the plot!

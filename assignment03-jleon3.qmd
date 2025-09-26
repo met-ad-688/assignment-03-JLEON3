@@ -56,7 +56,7 @@ df.createOrReplaceTempView("job_postings")
 # Show Schema and Sample Data
 print("---This is Diagnostic check, No need to print it in the final doc---")
 
-df.printSchema() # comment this line when rendering the submission
+#df.printSchema() # comment this line when rendering the submission
 df.show(5)
 ```
 
@@ -157,7 +157,7 @@ pio.templates["nike"] = go.layout.Template(
 
 
 
-# Salary Distribution by Industry and Employment Type
+# Question 1: Salary Distribution by Industry and Employment Type
 Compare salary variations across industries.
 Filter the dataset
   Remove records where salary is missing or zero.
@@ -204,77 +204,48 @@ fig = px.box(
       x="EMPLOYMENT_TYPE_NAME",
       y="SALARY",
       title="Salary Distribution by Employment Type",
-      # color_discrete_sequence=["black"], #single neutral color
       boxmode="group",
-      points="all", #show all outliers
+      points="all",
+      width=800 #show all outliers
 )
 
 # Improve layout, font styles, and axis labels
-fig.update_layout(template="nike")
-    # title=dict(
-    #       text="Salary Distribution by Employment Type",
-    #       font=dict(size=30, family="Arial", color="black", weight="bold") #biggest & bold title
-    # ),
-    # xaxis=dict(
-    #     title=dict(text="Employment Type", font=dict(size=14, family="Arial", color="black", weight="bold")),
-    #     tickangle=0,
-    #     tickfont=dict(size=12, family="arial", color="black", weight="bold"),
-    #     showline=True,
-    #     linewidth=2,
-    #     linecolor="black",
-    #     mirror=True,
-    #     showgrid=False,
-    #     categoryorder="array",
-    #     categoryarray=sorted_employment_types.tolist()
-    # ),
-    # yaxis=dict(
-    #     title=dict(text="Salary ($)", font=dict(size=14, family="Arial", color="black", weight="bold")),
-    #     tickvals=[0, 50000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000],
-    #     ticktext=["0", "50K", "100K", "150K", "200K", "250K", "300K", "350K", "400K", "450K", "500K"],
-    #     tickfont=dict(size=12, family="Arial", color="black", weight="bold"),
-    #     showline=True,
-    #     linewidth=2,
-    #     linecolor="black",
-    #     mirror=True,
-    #     showgrid=True,
-    #     gridcolor="lightgray",
-    #     gridwidth=0.5
-    # ),
-    # font=dict(family="Arial", size=12, color="black"),
-    # boxgap=0.7,
-    # plot_bgcolor="white",
-    # paper_bgcolor="white",
-    # showlegend=False,
-    # height=500,
-    # width=850,
-# )
-
+fig.update_layout(
+  template="nike",
+  xaxis_title="Employment Type",
+  yaxis_title="Salary ($)",
+  )
+    
 # Show the figure
 fig.show()
-# fig.write_html("output/Q1.html")
-# fig.write_image("output/Q1.svg", width=850, height=500, scale=1)
+fig.write_html("output/Q1.html")
+fig.write_image("output/Q1.svg", width=850, height=500, scale=1)
 
 
 ```
 
+The output shows there are significantly more full-time positions than part time positions and most fall in a range that goes up to just under $300k. While there are outliers for all 3 categories it is likely that the part-time outliers are due to annualized salary being calculated incorrectly while the full time outliers are likely legitimate.
+
 ```{python}
 pdf = df.select("NAICS2_NAME", "SALARY_FROM").toPandas()
 fig = px.box(pdf, x="NAICS2_NAME", y="SALARY_FROM", title="Salary Distribution by Industry")
-fig.update_layout(template="nike")
+fig.update_layout(
+  template="nike",
+   xaxis_title="Industry",
+  yaxis_title="Salary ($)",
+  )
 
 fig.update_xaxes(tickangle=45)
 
 fig.show()
 
-# add back once final image created
-#fig.write_html("output/Q1updated.html")
-#fig.write_image("output/Q1updated.svg", width=850, height=500, scale=1)
+fig.write_html("output/Q1part2.html")
+fig.write_image("output/Q1part2.svg", width=850, height=500, scale=1)
 ```
 
-fig.write_html("output/Q1updated.html")
-fig.write_image("output/Q1updated.svg", width=850, height=500, scale=1)
+The output shows most industries observed have relatively similar salary ranges for the most part and outliers are rare. The only indsutries to seemingly have consistent outliers are administrative services and health care. 
 
-# Salary Analysis by ONET Occupation Type (Bubble Chart)
+# Question 2: Salary Analysis by ONET Occupation Type (Bubble Chart)
 Analyze how salaries differ across ONET occupation types.
 Aggregate Data
   Compute median salary for each occupation in the ONET taxonomy.
@@ -285,35 +256,6 @@ Visualize results
     Size = Number of job postings
   Apply custom colors and font styles.
 Explanation: Write two sentences about what the graph reveals.
-
-
-
-
-<!-- # Calculate median salary by ONET occupation
-bubble_data = df.groupBy("ONET_NAME").agg(
-    F.expr("percentile_approx(SALARY, 0.5)").alias("Median_Salary"),
-    F.count("*").alias("Job_Postings_Count")
-).toPandas()
-
-# Create bubble chart
-fig = px.scatter(
-    bubble_data,
-    x="ONET_NAME",
-    y="Median_Salary",
-    size="Job_Postings_Count",
-    title="Median Salary by ONET Occupation"
-)
-
-fig.update_layout(template="nike")
-
-fig.update_xaxes(tickangle=45)
-
-fig.show()
-
-# add back once final image created
-#fig.write_html("output/Q1updated.html")
-#fig.write_image("output/Q1updated.svg", width=850, height=500, scale=1) -->
-
 
 ```{python}
 
@@ -359,11 +301,15 @@ fig = px.scatter(
 
 fig.update_layout(template="nike")
 
+fig.write_html("output/Q2.html")
+fig.write_image("output/Q2.svg", width=850, height=500, scale=1)
 
 ```
 
+This output shows of the industries observed most have salaries in the 90k-100k range with the exception of Business Intellegence Analyst and Computer Systems Engingeer/Architect. Computer Systems Engineer/Architect jobs have the 3rd highest amount of job postings observed despite the highest median salary suggesting a healthy need for these well paid professionals.
 
-# Salary by Education Level
+
+# Question 3: Salary by Education Level
 Create two groups:
   Associate’s or lower (GED, Associate, No Education Listed)
   Bachelor’s (Bachelor’s degree)
@@ -439,15 +385,14 @@ fig1.update_layout(
 
 fig1.show()
 
-```
-
-```{python}
-# Show unique values directly
-df.select("REMOTE_TYPE_NAME").distinct().show()
+fig.write_html("output/Q3.html")
+fig.write_image("output/Q3.svg", width=850, height=500, scale=1)
 
 ```
 
-# Salary by Remote Work Type
+This output shows there are more opportunities for those with a bachelor's degree or lower especially once the experience required is greater than 8 years. The output shows that an advanced degree doesn't necessarily lead to a higher salary and that roles seeking more experienced candidates value advanced degrees even less.
+
+# Question 4: Salary by Remote Work Type
 Split into three groups based on REMOTE_TYPE_NAME:
   Remote
   Hybrid
@@ -455,23 +400,6 @@ Split into three groups based on REMOTE_TYPE_NAME:
 Plot scatter plots for each group using,  MAX_YEARS_EXPERIENCE (with jitter), Average_Salary, LOT_V6_SPECIALIZED_OCCUPATION_NAME
 Also, create salary histograms for all three groups.
 After each graph, briefly describe any patterns or comparisons.
-
-
-remote_analysis = spark.sql("""
-    SELECT
-        remote_type_name AS Remote_Type,
-        PERCENTILE(SALARY, 0.5) AS Median_Salary,
-        COUNT(*) AS Job_Postings
-    FROM job_postings
-    GROUP BY LOT_OCCUPATION_NAME
-    ORDER BY Job_Postings DESC
-    LIMIT 10
-    """)
-
-#Step 2: Convert to Pandas DataFrame
-salary_pd = salary_analysis.toPandas()
-salary_pd.head()
-
 
 ```{python}
 #Create 3 Groups
@@ -543,11 +471,16 @@ fig3.update_layout(
 
 fig3.show()
 
+fig3.write_html("output/Q4part1.html")
+fig3.write_image("output/Q4part1.svg", width=850, height=500, scale=1)
+
 ```
+
+This output shows that there are limited hybrid employment opportunities once the experience required is greater than 5 years and no hybrid opportunities for positions requiring greater than 10 years of experience. This suggests organizations are open to offering hybrid opportunities to attract more junior workers but senior level or leadership positions are likely to be either fully in office or fully remote depending on company culture. 
 
 ```{python}
 
-fig4 = px.box(df_remote, x="REMOTE_GROUP", y="SALARY_FROM", title="Salary Distribution by Industry")
+fig4 = px.box(df_remote, x="REMOTE_GROUP", y="SALARY_FROM", title="Salary Distribution by Remote Group")
 fig4.update_layout(
   template="nike",
   xaxis_title="Remote Group",
@@ -555,5 +488,11 @@ fig4.update_layout(
   )
 
 fig4.show()
+
+fig4.write_html("output/Q4part2.html")
+fig4.write_image("output/Q4part2.svg", width=850, height=500, scale=1)
+
+
 ```
 
+This output shows hybrid positions have slightly lower range of salary outputs. Onsite and remote positions have a similar range of consistent salary levels suggesting both position types are viewed equally however onsite positions have higher outliers.
