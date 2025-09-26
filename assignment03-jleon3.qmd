@@ -441,6 +441,11 @@ fig1.show()
 
 ```
 
+```{python}
+# Show unique values directly
+df.select("REMOTE_TYPE_NAME").distinct().show()
+
+```
 
 # Salary by Remote Work Type
 Split into three groups based on REMOTE_TYPE_NAME:
@@ -450,3 +455,105 @@ Split into three groups based on REMOTE_TYPE_NAME:
 Plot scatter plots for each group using,  MAX_YEARS_EXPERIENCE (with jitter), Average_Salary, LOT_V6_SPECIALIZED_OCCUPATION_NAME
 Also, create salary histograms for all three groups.
 After each graph, briefly describe any patterns or comparisons.
+
+
+remote_analysis = spark.sql("""
+    SELECT
+        remote_type_name AS Remote_Type,
+        PERCENTILE(SALARY, 0.5) AS Median_Salary,
+        COUNT(*) AS Job_Postings
+    FROM job_postings
+    GROUP BY LOT_OCCUPATION_NAME
+    ORDER BY Job_Postings DESC
+    LIMIT 10
+    """)
+
+#Step 2: Convert to Pandas DataFrame
+salary_pd = salary_analysis.toPandas()
+salary_pd.head()
+
+
+```{python}
+#Create 3 Groups
+Remote = ["Remote"]
+Hybrid = ["Hybrid Remote"]
+Onsite = ["Not Remote", "\\[None\\]"]  # Escape the brackets since they're regex special characters
+
+# Add REMOTE_Group column with corrected regex patterns
+df = df.withColumn(
+    "REMOTE_GROUP",
+    when(col("REMOTE_TYPE_NAME").rlike("(?i)^Remote$"), "Remote")
+    .when(col("REMOTE_TYPE_NAME").rlike("(?i)^Hybrid Remote$"), "Hybrid")
+    .when(col("REMOTE_TYPE_NAME").rlike("(?i)^(Not Remote|\\[None\\])$"), "Onsite")
+    .otherwise(None)  # This will help you see unmatched values
+)
+
+# Rest of your code remains the same
+df = df.withColumn("MAX_YEARS_EXPERIENCE", col("MAX_YEARS_EXPERIENCE").cast("float"))
+df = df.withColumn("Average_Salary", col("Average_Salary").cast("float"))
+
+df = df.filter(
+    col("MAX_YEARS_EXPERIENCE").isNotNull() &
+    col("Average_Salary").isNotNull() &
+    (col("MAX_YEARS_EXPERIENCE") > 0) &
+    (col("Average_Salary") > 0)
+)
+
+df_filtered = df.filter(col("REMOTE_GROUP").isin("Remote", "Hybrid", "Onsite"))
+df_remote = df_filtered.toPandas()
+
+
+```
+
+
+```{python}
+
+import numpy as np
+
+jitter_strength = 0.2
+np.random.seed(42)
+df_remote["MAX_YEARS_EXPERIENCE_JITTER"] = df_remote["MAX_YEARS_EXPERIENCE"] + np.random.uniform(-jitter_strength, jitter_strength, size=len(df_remote))
+
+fig3 = px.scatter(
+    df_remote,
+    x="MAX_YEARS_EXPERIENCE_JITTER",
+    y="Average_Salary",
+    color="REMOTE_GROUP",
+    hover_data=["LOT_V6_SPECIALIZED_OCCUPATION_NAME"],
+    title="<b>Experience vs Salary by Remote Work Type</b>",
+    opacity=0.7,
+    width=800
+)
+
+fig3.update_traces(marker=dict(size=7, line=dict(width=1)))
+
+fig3.update_layout(
+  template="nike",
+  font=dict(size=14),
+  title_font=dict(size=22),
+  xaxis_title="Years of Experience",
+  yaxis_title="Average Salary (USD)",
+  legend_title="Remote Work Type",
+  hoverlabel=dict(font_size=13),
+  margin=dict(t=70, b=60, l=60, r=60,),
+  xaxis=dict(
+    tickmode='linear',
+    dtick=1)
+)
+
+fig3.show()
+
+```
+
+```{python}
+
+fig4 = px.box(df_remote, x="REMOTE_GROUP", y="SALARY_FROM", title="Salary Distribution by Industry")
+fig4.update_layout(
+  template="nike",
+  xaxis_title="Remote Group",
+  yaxis_title="Salary (USD)",
+  )
+
+fig4.show()
+```
+
