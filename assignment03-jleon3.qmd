@@ -54,10 +54,10 @@ df = spark.read.option("header", "true").option("inferSchema", "true").option("m
 df.createOrReplaceTempView("job_postings")
 
 # Show Schema and Sample Data
-print("---This is Diagnostic check, No need to print it in the final doc---")
+#print("---This is Diagnostic check, No need to print it in the final doc---")
 
 #df.printSchema() # comment this line when rendering the submission
-df.show(5)
+#df.show(5)
 ```
 
 # Data Preparation
@@ -300,6 +300,8 @@ fig = px.scatter(
 )
 
 fig.update_layout(template="nike")
+
+fig.show()
 
 fig.write_html("output/Q2.html")
 fig.write_image("output/Q2.svg", width=850, height=500, scale=1)
